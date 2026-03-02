@@ -1,4 +1,7 @@
 package com.taile.petevo.platform
 
-actual fun currentTimeMillis(): Long = kotlin.js.Date.now().toLong()
+private fun dateNow(): Double = js("Date.now()")
+
+actual fun currentTimeMillis(): Long = dateNow().toLong()
+
 

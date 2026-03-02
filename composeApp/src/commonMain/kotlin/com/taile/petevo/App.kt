@@ -1,47 +1,77 @@
 package com.taile.petevo
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import org.jetbrains.compose.resources.painterResource
-
-import petevo.composeapp.generated.resources.Res
-import petevo.composeapp.generated.resources.compose_multiplatform
+import com.taile.petevo.engine.FocusEngine
+import com.taile.petevo.model.SessionState
+import com.taile.petevo.platform.rememberPetStorage
+import com.taile.petevo.platform.rememberSystemController
+import com.taile.petevo.ui.Screen
+import com.taile.petevo.ui.screens.FocusScreen
+import com.taile.petevo.ui.screens.HomeScreen
+import com.taile.petevo.ui.screens.ResultScreen
+import com.taile.petevo.ui.screens.SetupScreen
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import androidx.compose.foundation.layout.Box
 
 @Composable
-@Preview
 fun App() {
+    val systemController = rememberSystemController()
+    val petStorage = rememberPetStorage()
+    val engineScope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
+    val engine = remember { FocusEngine(systemController, petStorage, engineScope) }
+    val state by engine.state.collectAsState()
+
+    var currentScreen by remember { mutableStateOf(Screen.HOME) }
+
+    // Auto-navigate based on session state changes
+    LaunchedEffect(state.sessionState) {
+        when (state.sessionState) {
+            SessionState.SUCCESS, SessionState.FAIL -> currentScreen = Screen.RESULT
+            SessionState.RUNNING -> currentScreen = Screen.FOCUS
+            else -> {}
+        }
+    }
+
     MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
+        Box(
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
+                .fillMaxSize()
                 .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
+            Crossfade(targetState = currentScreen) { screen ->
+                when (screen) {
+                    Screen.HOME -> HomeScreen(
+                        state = state,
+                        onStartSetup = { currentScreen = Screen.SETUP }
+                    )
+
+                    Screen.SETUP -> SetupScreen(
+                        previewXp = { mode, duration -> engine.previewXp(mode, duration) },
+                        onStart = { mode, duration ->
+                            engine.startSession(mode, duration)
+                        },
+                        onBack = { currentScreen = Screen.HOME }
+                    )
+
+                    Screen.FOCUS -> FocusScreen(
+                        state = state,
+                        onCancel = { engine.cancelSession() }
+                    )
+
+                    Screen.RESULT -> ResultScreen(
+                        state = state,
+                        onDismiss = {
+                            engine.acknowledge()
+                            currentScreen = Screen.HOME
+                        }
+                    )
                 }
             }
         }
