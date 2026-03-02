@@ -1,0 +1,10 @@
+{
+  "name": "FocusPet",
+  "short_name": "FocusPet",
+  "description": "Hardcore Focus App with Virtual Pet",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F5F5",
+  "theme_color": "#4CAF50",
+  "orientation": "any"
+}

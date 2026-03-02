@@ -1,28 +1,33 @@
 package com.taile.petevo.platform
 
+import android.annotation.SuppressLint
 import android.app.NotificationManager
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
-import android.location.LocationManager
+import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.PowerManager
-import android.provider.Settings
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ProcessLifecycleOwner
 
-class AndroidSystemController(private val context: Context) : SystemController {
+class AndroidSystemController(
+    private val context: Context,
+    private val lifecycleOwner: LifecycleOwner
+) : SystemController {
 
     private var wakeLock: PowerManager.WakeLock? = null
 
+    @SuppressLint("WakelockTimeout")
     override fun acquireWakeLock() {
         val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        @Suppress("DEPRECATION")
         wakeLock = pm.newWakeLock(
-            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+            PowerManager.SCREEN_DIM_WAKE_LOCK or PowerManager.ON_AFTER_RELEASE,
             "PetEvo:FocusWakeLock"
         ).apply {
             acquire(120 * 60 * 1000L) // max 2 hours
@@ -50,30 +55,39 @@ class AndroidSystemController(private val context: Context) : SystemController {
         }
     }
 
+    @SuppressLint("MissingPermission")
     override fun toggleConnectivity(enable: Boolean) {
         // WiFi
         try {
             val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
             @Suppress("DEPRECATION")
             wifiManager.isWifiEnabled = enable
-        } catch (_: Exception) {
-            // May fail without proper permissions on newer Android
-        }
+        } catch (_: Exception) { }
 
         // Bluetooth
-        try {
-            val btManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
-            val btAdapter = btManager?.adapter
-            if (btAdapter != null) {
-                @Suppress("DEPRECATION")
-                if (enable) btAdapter.enable() else btAdapter.disable()
-            }
-        } catch (_: Exception) {
-            // May fail without BLUETOOTH_CONNECT on API 31+
-        }
+        toggleBluetooth(enable)
+    }
 
-        // GPS — can only open settings, cannot toggle programmatically
-        // We skip GPS toggle as it requires system-level permission
+    @SuppressLint("MissingPermission")
+    private fun toggleBluetooth(enable: Boolean) {
+        try {
+            // Always check permission first
+            val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                context.checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT) ==
+                    PackageManager.PERMISSION_GRANTED
+            } else {
+                context.checkSelfPermission(android.Manifest.permission.BLUETOOTH_ADMIN) ==
+                    PackageManager.PERMISSION_GRANTED
+            }
+            if (!hasPermission) return
+
+            val btManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
+                ?: return
+            val btAdapter: BluetoothAdapter = btManager.adapter ?: return
+            @Suppress("DEPRECATION")
+            if (enable) btAdapter.enable() else btAdapter.disable()
+        } catch (_: SecurityException) { }
+        catch (_: Exception) { }
     }
 
     override fun observeAppVisibility(): Flow<Boolean> = callbackFlow {
@@ -87,10 +101,10 @@ class AndroidSystemController(private val context: Context) : SystemController {
             }
         }
 
-        ProcessLifecycleOwner.get().lifecycle.addObserver(observer)
+        lifecycleOwner.lifecycle.addObserver(observer)
 
         awaitClose {
-            ProcessLifecycleOwner.get().lifecycle.removeObserver(observer)
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 }

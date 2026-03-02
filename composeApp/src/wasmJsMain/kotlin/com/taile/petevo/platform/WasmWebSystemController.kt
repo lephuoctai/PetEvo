@@ -30,10 +30,12 @@ class WasmWebSystemController : SystemController {
     }
 
     override fun observeAppVisibility(): Flow<Boolean> = callbackFlow {
+        // In Wasm, Document doesn't expose visibilityState directly.
+        // visibilitychange fires when tab is hidden/shown — treat it as hidden.
         val visibilityHandler: (Event) -> Unit = {
-            val hidden = js("document.hidden")
-            val isHidden = hidden.toString() == "true"
-            trySend(!isHidden)
+            // When visibilitychange fires and we can't read the state,
+            // conservatively treat it as "hidden" to enforce strict focus.
+            trySend(false)
         }
         val blurHandler: (Event) -> Unit = {
             trySend(false)
