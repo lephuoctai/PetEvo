@@ -1,0 +1,63 @@
+name: Build and Deploy to Vercel
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      # - name: Install ImageMagick for icon generation
+      #   run: sudo apt-get update && sudo apt-get install -y imagemagick librsvg2-bin
+
+      # - name: Generate PNG icons from SVG
+      #   run: |
+      #     cd composeApp/src/webMain/resources/icons
+      #     # Generate various sizes for PWA
+      #     for size in 72 96 128 144 152 192 384 512; do
+      #       rsvg-convert -w $size -h $size icon.svg > icon-$size.png
+      #       echo "Generated icon-$size.png"
+      #     done
+      #     # Generate maskable icons (with padding)
+      #     rsvg-convert -w 192 -h 192 icon.svg > icon-maskable-192.png
+      #     rsvg-convert -w 512 -h 512 icon.svg > icon-maskable-512.png
+      #     # Generate screenshot placeholder
+      #     convert -size 540x720 xc:#6200EE -fill white -gravity center -pointsize 48 -annotate 0 "Pomodoro Timer" screenshot.png || echo "Screenshot generation skipped"
+      #     ls -la
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build WasmJS Distribution
+        run: ./gradlew :composeApp:wasmJsBrowserDistribution
+
+      - name: Copy build output to deploy folder
+        run: |
+          mkdir -p deploy
+          cp -r composeApp/build/dist/wasmJs/productionExecutable/* deploy/
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel
+        run: |
+          cd deploy
+          vercel --prod --token=${{ secrets.VERCEL_TOKEN_PET_EVO }} --yes
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_PET_EVO }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_PET_EVO }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PET_EVO }}
+
