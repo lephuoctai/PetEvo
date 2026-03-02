@@ -153,8 +153,8 @@ fun FocusScreen(
             title = { Text("Abandon your pet?", fontWeight = FontWeight.Bold) },
             text = {
                 Text(
-                    "Are you sure you want to quit? Your pet will be sad and you'll lose " +
-                    "50% XP with an emotion penalty. A 5-minute cooldown will be applied."
+                    "Are you sure you want to quit? Your pet will be sad! " +
+                    "You'll get 0 XP, an emotion penalty, and a 5-minute cooldown."
                 )
             },
             confirmButton = {

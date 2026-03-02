@@ -23,5 +23,17 @@ class AndroidPetStorage(context: Context) : PetStorage {
     override fun loadCooldownEnd(): Long {
         return prefs.getLong("cooldown_end", 0L)
     }
+
+    override fun saveRunningSession(data: String) {
+        prefs.edit().putString("running_session", data).apply()
+    }
+
+    override fun loadRunningSession(): String? {
+        return prefs.getString("running_session", null)
+    }
+
+    override fun clearRunningSession() {
+        prefs.edit().remove("running_session").apply()
+    }
 }
 

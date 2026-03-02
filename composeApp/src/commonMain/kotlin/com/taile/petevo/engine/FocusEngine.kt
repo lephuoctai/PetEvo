@@ -12,7 +12,13 @@ import com.taile.petevo.platform.SystemController
 import com.taile.petevo.platform.currentTimeMillis
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.sync.Mutex
 import kotlin.math.roundToInt
+
+private const val TAG = "bug"
+
+// Simple logging expect/actual
+internal expect fun logDebug(tag: String, message: String)
 
 data class FocusUiState(
     val pet: Pet = Pet(),
@@ -35,12 +41,18 @@ class FocusEngine(
     private var visibilityJob: Job? = null
     private var cooldownJob: Job? = null
 
+    // Guard to prevent double end-session calls (works on all platforms)
+    private val endSessionGuard = Mutex()
+    private var sessionEnded = false
+
     companion object {
         private const val COOLDOWN_DURATION_MS = 5 * 60 * 1000L // 5 minutes
     }
 
     init {
+        logDebug(TAG, "FocusEngine init")
         loadPet()
+        recoverSession()
         checkCooldown()
     }
 
@@ -48,14 +60,30 @@ class FocusEngine(
         val json = storage.loadPet()
         if (json != null) {
             val pet = deserializePet(json)
+            logDebug(TAG, "loadPet: level=${pet.level} xp=${pet.xp} emotion=${pet.emotion}")
             _state.update { it.copy(pet = pet) }
         }
-        // Check streak reset at midnight
         checkStreakReset()
     }
 
     private fun savePet(pet: Pet) {
+        logDebug(TAG, "savePet: level=${pet.level} xp=${pet.xp} emotion=${pet.emotion}")
         storage.savePet(serializePet(pet))
+    }
+
+    private fun recoverSession() {
+        val savedData = storage.loadRunningSession()
+        logDebug(TAG, "recoverSession: savedData=$savedData")
+        if (savedData != null) {
+            val session = deserializeSession(savedData)
+            if (session != null) {
+                logDebug(TAG, "recoverSession: found unfinished session -> FAIL")
+                storage.clearRunningSession()
+                applyFailurePenalty(session)
+            } else {
+                storage.clearRunningSession()
+            }
+        }
     }
 
     private fun checkStreakReset() {
@@ -73,6 +101,7 @@ class FocusEngine(
         val cooldownEnd = storage.loadCooldownEnd()
         val now = currentTimeMillis()
         if (cooldownEnd > now) {
+            logDebug(TAG, "checkCooldown: on cooldown, remaining=${(cooldownEnd - now) / 1000}s")
             _state.update { it.copy(sessionState = SessionState.COOLDOWN) }
             startCooldownTimer(cooldownEnd)
         }
@@ -85,7 +114,11 @@ class FocusEngine(
     }
 
     fun startSession(mode: FocusMode, durationMinutes: Int) {
-        if (_state.value.sessionState != SessionState.IDLE) return
+        logDebug(TAG, "startSession: mode=$mode dur=$durationMinutes state=${_state.value.sessionState}")
+        if (_state.value.sessionState != SessionState.IDLE) {
+            logDebug(TAG, "startSession: BLOCKED, not IDLE")
+            return
+        }
 
         val duration = durationMinutes.coerceAtLeast(10)
         val projectedXp = previewXp(mode, duration)
@@ -98,6 +131,9 @@ class FocusEngine(
             remainingSeconds = duration * 60
         )
 
+        sessionEnded = false
+        storage.saveRunningSession(serializeSession(session))
+
         _state.update {
             it.copy(
                 sessionState = SessionState.RUNNING,
@@ -107,55 +143,80 @@ class FocusEngine(
             )
         }
 
-        // Platform: wake lock + focus mode
         systemController.acquireWakeLock()
         systemController.enableFocusMode()
         systemController.toggleConnectivity(false)
 
-        // Start countdown
+        // Countdown timer
         timerJob = scope.launch {
+            logDebug(TAG, "timerJob: started ${duration * 60}s")
             var remaining = duration * 60
             while (remaining > 0 && isActive) {
                 delay(1000L)
                 remaining--
                 _state.update { it.copy(session = it.session.copy(remainingSeconds = remaining)) }
             }
-            if (isActive) {
-                onSuccess()
+            if (isActive && !sessionEnded) {
+                logDebug(TAG, "timerJob: done -> endSessionWithSuccess")
+                endSessionWithSuccess()
             }
         }
 
-        // Monitor visibility
+        // Visibility monitor (1.5s grace period to avoid false triggers on start)
         visibilityJob = scope.launch {
+            delay(1500L)
+            logDebug(TAG, "visibilityJob: monitoring started")
             systemController.observeAppVisibility().collect { visible ->
-                if (!visible && _state.value.sessionState == SessionState.RUNNING) {
-                    onFailure()
+                logDebug(TAG, "visibility: visible=$visible ended=$sessionEnded state=${_state.value.sessionState}")
+                if (!visible && !sessionEnded && _state.value.sessionState == SessionState.RUNNING) {
+                    logDebug(TAG, "visibility: hidden -> endSessionWithFailure")
+                    endSessionWithFailure()
                 }
             }
         }
     }
 
-    private fun onSuccess() {
+    /**
+     * Thread-safe guard: only the first caller wins.
+     * Mutex.tryLock() is non-suspending and works on JVM, JS, and WasmJs.
+     */
+    private fun tryEndSession(): Boolean {
+        if (!endSessionGuard.tryLock()) {
+            logDebug(TAG, "tryEndSession: ALREADY LOCKED")
+            return false
+        }
+        if (sessionEnded) {
+            logDebug(TAG, "tryEndSession: ALREADY ENDED")
+            endSessionGuard.unlock()
+            return false
+        }
+        sessionEnded = true
+        endSessionGuard.unlock()
+        logDebug(TAG, "tryEndSession: OK")
+        return true
+    }
+
+    private fun endSessionWithSuccess() {
+        if (!tryEndSession()) return
+
         timerJob?.cancel()
         visibilityJob?.cancel()
+        timerJob = null
+        visibilityJob = null
+
+        storage.clearRunningSession()
 
         val currentState = _state.value
         val session = currentState.session
         val pet = currentState.pet
 
-        // Calculate XP with emotion multiplier
         val baseXp = XpCalculator.calculateXp(session.mode, session.durationMinutes)
         val multiplier = EmotionEngine.getMultiplier(pet.emotion)
         val xpGained = (baseXp * multiplier).roundToInt()
 
-        // Apply emotion boost
         val newEmotion = EmotionEngine.applyDelta(pet.emotion, EmotionEngine.successDelta(session.mode))
-
-        // Apply XP and level up
         val prevLevel = pet.level
         var updatedPet = LevelSystem.applyXp(pet.copy(emotion = newEmotion), xpGained)
-
-        // Update streak and focus minutes
         updatedPet = updatedPet.copy(
             totalFocusMinutes = updatedPet.totalFocusMinutes + session.durationMinutes,
             streak = updatedPet.streak + 1,
@@ -163,11 +224,9 @@ class FocusEngine(
         )
 
         savePet(updatedPet)
+        releasePlatformResources()
 
-        // Release platform resources
-        systemController.releaseWakeLock()
-        systemController.disableFocusMode()
-        systemController.toggleConnectivity(true)
+        logDebug(TAG, "SUCCESS: xp=$xpGained level=${updatedPet.level} emotion=${updatedPet.emotion}")
 
         _state.update {
             it.copy(
@@ -179,48 +238,56 @@ class FocusEngine(
         }
     }
 
-    private fun onFailure() {
+    private fun endSessionWithFailure() {
+        if (!tryEndSession()) return
+
         timerJob?.cancel()
         visibilityJob?.cancel()
+        timerJob = null
+        visibilityJob = null
 
-        val currentState = _state.value
-        val session = currentState.session
-        val pet = currentState.pet
+        storage.clearRunningSession()
 
-        // 50% of projected XP on failure
-        val baseXp = XpCalculator.calculateXp(session.mode, session.durationMinutes)
-        val multiplier = EmotionEngine.getMultiplier(pet.emotion)
-        val xpGained = ((baseXp * multiplier) * 0.5).roundToInt()
+        val session = _state.value.session
+        logDebug(TAG, "FAILURE: mode=${session.mode} dur=${session.durationMinutes}")
 
-        // Apply emotion penalty
+        applyFailurePenalty(session)
+    }
+
+    private fun applyFailurePenalty(session: FocusSession) {
+        val pet = _state.value.pet
+        val xpGained = 0
         val newEmotion = EmotionEngine.applyDelta(pet.emotion, EmotionEngine.failureDelta(session.mode))
-
-        // Apply XP (no streak counted)
-        val prevLevel = pet.level
-        var updatedPet = LevelSystem.applyXp(pet.copy(emotion = newEmotion), xpGained)
-        updatedPet = updatedPet.copy(lastActiveDate = currentTimeMillis())
+        val updatedPet = pet.copy(emotion = newEmotion, lastActiveDate = currentTimeMillis())
 
         savePet(updatedPet)
 
-        // Set cooldown
         val cooldownEnd = currentTimeMillis() + COOLDOWN_DURATION_MS
         storage.saveCooldownEnd(cooldownEnd)
+        releasePlatformResources()
 
-        // Release platform resources
-        systemController.releaseWakeLock()
-        systemController.disableFocusMode()
-        systemController.toggleConnectivity(true)
+        logDebug(TAG, "applyFailurePenalty: emotion=${updatedPet.emotion} -> state=FAIL")
 
         _state.update {
             it.copy(
                 pet = updatedPet,
                 sessionState = SessionState.FAIL,
                 lastXpGained = xpGained,
-                didLevelUp = updatedPet.level > prevLevel
+                didLevelUp = false
             )
         }
 
         startCooldownTimer(cooldownEnd)
+    }
+
+    private fun releasePlatformResources() {
+        try {
+            systemController.releaseWakeLock()
+            systemController.disableFocusMode()
+            systemController.toggleConnectivity(true)
+        } catch (e: Exception) {
+            logDebug(TAG, "releasePlatformResources error: ${e.message}")
+        }
     }
 
     private fun startCooldownTimer(cooldownEndMs: Long) {
@@ -239,13 +306,14 @@ class FocusEngine(
     }
 
     fun cancelSession() {
+        logDebug(TAG, "cancelSession: state=${_state.value.sessionState}")
         if (_state.value.sessionState == SessionState.RUNNING) {
-            onFailure()
+            endSessionWithFailure()
         }
     }
 
     fun acknowledge() {
-        // After viewing result screen, go back to IDLE or COOLDOWN
+        logDebug(TAG, "acknowledge")
         val cooldownEnd = storage.loadCooldownEnd()
         val now = currentTimeMillis()
         if (cooldownEnd > now) {
@@ -256,7 +324,8 @@ class FocusEngine(
         }
     }
 
-    // Simple manual JSON serialization (no kotlinx.serialization dependency needed)
+    // --- Serialization ---
+
     private fun serializePet(pet: Pet): String {
         return "${pet.level},${pet.xp},${pet.emotion},${pet.totalFocusMinutes},${pet.streak},${pet.lastActiveDate}"
     }
@@ -276,5 +345,22 @@ class FocusEngine(
             Pet()
         }
     }
-}
 
+    private fun serializeSession(session: FocusSession): String {
+        return "${session.mode.name},${session.durationMinutes},${session.startTimeMs},${session.projectedXp}"
+    }
+
+    private fun deserializeSession(data: String): FocusSession? {
+        return try {
+            val parts = data.split(",")
+            FocusSession(
+                mode = FocusMode.valueOf(parts[0]),
+                durationMinutes = parts[1].toInt(),
+                startTimeMs = parts[2].toLong(),
+                projectedXp = parts[3].toInt()
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+}

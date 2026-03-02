@@ -9,9 +9,13 @@ import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.PowerManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 
@@ -101,10 +105,14 @@ class AndroidSystemController(
             }
         }
 
-        lifecycleOwner.lifecycle.addObserver(observer)
+        withContext(Dispatchers.Main) {
+            lifecycleOwner.lifecycle.addObserver(observer)
+        }
 
         awaitClose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
+            MainScope().launch {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+            }
         }
     }
 }

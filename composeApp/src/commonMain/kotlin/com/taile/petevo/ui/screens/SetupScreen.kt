@@ -96,8 +96,8 @@ fun SetupScreen(
             Slider(
                 value = durationMinutes,
                 onValueChange = { durationMinutes = it },
-                valueRange = 10f..120f,
-                steps = 21, // 10, 15, 20, ... 120
+                valueRange = 10f..180f,
+                steps = 33, // 10, 15, 20, ... 180
                 modifier = Modifier.fillMaxWidth(),
                 colors = SliderDefaults.colors(
                     thumbColor = PrimaryGreen,
@@ -111,7 +111,7 @@ fun SetupScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("10 min", fontSize = 12.sp, color = Color.Gray)
-                Text("120 min", fontSize = 12.sp, color = Color.Gray)
+                Text("180 min", fontSize = 12.sp, color = Color.Gray)
             }
 
             Spacer(modifier = Modifier.height(32.dp))

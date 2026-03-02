@@ -100,7 +100,7 @@ fun ResultScreen(
 
             // XP gained
             Text(
-                text = "XP ${if (state.lastXpGained >= 0) "+" else ""}${state.lastXpGained}",
+                text = if (isSuccess) "XP +${state.lastXpGained}" else "XP 0",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = accentColor
@@ -108,7 +108,7 @@ fun ResultScreen(
 
             if (!isSuccess) {
                 Text(
-                    text = "(50% penalty applied)",
+                    text = "(No XP for leaving!)",
                     fontSize = 14.sp,
                     color = Color.White.copy(alpha = 0.5f)
                 )
