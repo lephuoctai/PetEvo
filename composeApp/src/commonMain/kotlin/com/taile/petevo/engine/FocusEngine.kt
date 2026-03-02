@@ -12,7 +12,6 @@ import com.taile.petevo.platform.SystemController
 import com.taile.petevo.platform.currentTimeMillis
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.sync.Mutex
 import kotlin.math.roundToInt
 
 private const val TAG = "bug"
@@ -41,8 +40,7 @@ class FocusEngine(
     private var visibilityJob: Job? = null
     private var cooldownJob: Job? = null
 
-    // Guard to prevent double end-session calls (works on all platforms)
-    private val endSessionGuard = Mutex()
+    // Simple flag to prevent double end-session calls
     private var sessionEnded = false
 
     companion object {
@@ -177,21 +175,16 @@ class FocusEngine(
     }
 
     /**
-     * Thread-safe guard: only the first caller wins.
-     * Mutex.tryLock() is non-suspending and works on JVM, JS, and WasmJs.
+     * Simple guard: only the first caller wins.
+     * Safe because: JS/Wasm is single-threaded, and on JVM all callers
+     * are on the same coroutine dispatcher (no true parallelism).
      */
     private fun tryEndSession(): Boolean {
-        if (!endSessionGuard.tryLock()) {
-            logDebug(TAG, "tryEndSession: ALREADY LOCKED")
-            return false
-        }
         if (sessionEnded) {
             logDebug(TAG, "tryEndSession: ALREADY ENDED")
-            endSessionGuard.unlock()
             return false
         }
         sessionEnded = true
-        endSessionGuard.unlock()
         logDebug(TAG, "tryEndSession: OK")
         return true
     }
@@ -307,8 +300,11 @@ class FocusEngine(
 
     fun cancelSession() {
         logDebug(TAG, "cancelSession: state=${_state.value.sessionState}")
-        if (_state.value.sessionState == SessionState.RUNNING) {
-            endSessionWithFailure()
+        // Dispatch into scope to run on same dispatcher as timer/visibility
+        scope.launch {
+            if (_state.value.sessionState == SessionState.RUNNING) {
+                endSessionWithFailure()
+            }
         }
     }
 

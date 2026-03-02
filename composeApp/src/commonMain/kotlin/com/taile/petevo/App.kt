@@ -26,16 +26,19 @@ fun App() {
     val petStorage = rememberPetStorage()
     val engineScope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
     val engine = remember { FocusEngine(systemController, petStorage, engineScope) }
-    val state by engine.state.collectAsState()
+    val stateValue = engine.state.collectAsState()
+    // Read the snapshot state (not delegated, so derivedStateOf can track it)
+    val state = stateValue.value
 
-    var currentScreen by remember { mutableStateOf(Screen.HOME) }
+    // Manual override for SETUP screen (no SessionState equivalent)
+    var showSetup by remember { mutableStateOf(false) }
 
-    // Auto-navigate based on session state changes
-    LaunchedEffect(state.sessionState) {
-        when (state.sessionState) {
-            SessionState.SUCCESS, SessionState.FAIL -> currentScreen = Screen.RESULT
-            SessionState.RUNNING -> currentScreen = Screen.FOCUS
-            else -> {}
+    // Screen is derived DIRECTLY from sessionState — instant, no async
+    val currentScreen = when (state.sessionState) {
+        SessionState.RUNNING -> Screen.FOCUS
+        SessionState.SUCCESS, SessionState.FAIL -> Screen.RESULT
+        SessionState.COOLDOWN, SessionState.IDLE -> {
+            if (showSetup) Screen.SETUP else Screen.HOME
         }
     }
 
@@ -49,15 +52,16 @@ fun App() {
                 when (screen) {
                     Screen.HOME -> HomeScreen(
                         state = state,
-                        onStartSetup = { currentScreen = Screen.SETUP }
+                        onStartSetup = { showSetup = true }
                     )
 
                     Screen.SETUP -> SetupScreen(
                         previewXp = { mode, duration -> engine.previewXp(mode, duration) },
                         onStart = { mode, duration ->
+                            showSetup = false
                             engine.startSession(mode, duration)
                         },
-                        onBack = { currentScreen = Screen.HOME }
+                        onBack = { showSetup = false }
                     )
 
                     Screen.FOCUS -> FocusScreen(
@@ -68,8 +72,8 @@ fun App() {
                     Screen.RESULT -> ResultScreen(
                         state = state,
                         onDismiss = {
+                            showSetup = false
                             engine.acknowledge()
-                            currentScreen = Screen.HOME
                         }
                     )
                 }

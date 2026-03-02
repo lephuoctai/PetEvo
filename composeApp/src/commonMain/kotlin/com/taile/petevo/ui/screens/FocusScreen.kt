@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.taile.petevo.engine.FocusUiState
 import com.taile.petevo.model.FocusMode
+import com.taile.petevo.model.SessionState
 import com.taile.petevo.ui.theme.*
 
 @Composable
@@ -35,6 +36,14 @@ fun FocusScreen(
     val timeText = "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
 
     var showCancelDialog by remember { mutableStateOf(false) }
+
+    // If state is no longer RUNNING (e.g. visibility triggered failure),
+    // auto-dismiss dialog so navigation can proceed
+    LaunchedEffect(state.sessionState) {
+        if (state.sessionState != SessionState.RUNNING) {
+            showCancelDialog = false
+        }
+    }
 
     Column(
         modifier = Modifier
