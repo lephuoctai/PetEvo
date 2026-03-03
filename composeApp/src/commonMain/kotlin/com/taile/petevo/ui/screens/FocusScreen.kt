@@ -1,6 +1,7 @@
 package com.taile.petevo.ui.screens
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,11 +12,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.composables.icons.fontawesome.FontAwesome
+import com.composables.icons.fontawesome.solid.Brain
+import com.composables.icons.fontawesome.solid.Clock
+import com.composables.icons.fontawesome.solid.Frown
+import com.composables.icons.fontawesome.solid.FrownOpen
+import com.composables.icons.fontawesome.solid.Paw
+import com.composables.icons.fontawesome.solid.Smile
+import com.composables.icons.fontawesome.solid.ExclamationTriangle
 import com.taile.petevo.engine.FocusUiState
 import com.taile.petevo.model.FocusMode
 import com.taile.petevo.model.SessionState
@@ -59,18 +69,37 @@ fun FocusScreen(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = when (session.mode) {
-                    FocusMode.DEEP_FOCUS -> "🧠 Deep Focus"
-                    FocusMode.POMODORO -> "🍅 Pomodoro"
-                },
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White.copy(alpha = 0.7f)
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    when (session.mode) {
+                        FocusMode.DEEP_FOCUS -> FontAwesome.Solid.Brain
+                        FocusMode.POMODORO -> FontAwesome.Solid.Clock
+                    },
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    colorFilter = ColorFilter.tint(Color.White.copy(alpha = 0.7f))
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = when (session.mode) {
+                        FocusMode.DEEP_FOCUS -> "Deep Focus"
+                        FocusMode.POMODORO -> "Pomodoro"
+                    },
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+            }
 
+            var tip = "";
+            if (session.projectedXp % 2 == 0){
+                tip = "Streak can increase pet's emotion"
+            } else {
+                tip = "The XP got was affected by pet's emotion"
+            }
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Stay focused! Don't leave this tab.",
+                text = "Tip: $tip",
                 fontSize = 14.sp,
                 color = Color.White.copy(alpha = 0.4f)
             )
@@ -116,13 +145,8 @@ fun FocusScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = petFocusEmoji(state.pet.emotion),
-                    fontSize = 48.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
                     text = timeText,
-                    fontSize = 48.sp,
+                    fontSize = 72.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
@@ -148,7 +172,16 @@ fun FocusScreen(
                     contentColor = AccentRed
                 )
             ) {
-                Text("⚠️ Abandon Session", fontWeight = FontWeight.Medium)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        FontAwesome.Solid.ExclamationTriangle,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        colorFilter = ColorFilter.tint(AccentRed)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Abandon Session", fontWeight = FontWeight.Medium)
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -179,19 +212,19 @@ fun FocusScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showCancelDialog = false }) {
-                    Text("Keep going! 💪")
+                    Text("Keep going!")
                 }
             }
         )
     }
 }
 
-private fun petFocusEmoji(emotion: Int): String {
+private fun petFocusIcon(emotion: Int): androidx.compose.ui.graphics.vector.ImageVector {
     return when {
-        emotion >= 87 -> "😺"
-        emotion >= 50 -> "🐱"
-        emotion >= 0 -> "😿"
-        else -> "🙀"
+        emotion >= 87 -> FontAwesome.Solid.Smile
+        emotion >= 50 -> FontAwesome.Solid.Paw
+        emotion >= 0 -> FontAwesome.Solid.Frown
+        else -> FontAwesome.Solid.FrownOpen
     }
 }
 

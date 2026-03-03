@@ -1,5 +1,6 @@
 package com.taile.petevo.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,10 +10,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.composables.icons.fontawesome.FontAwesome
+import com.composables.icons.fontawesome.solid.ArrowLeft
+import com.composables.icons.fontawesome.solid.Brain
+import com.composables.icons.fontawesome.solid.Clock
+import com.composables.icons.fontawesome.solid.Rocket
+import com.composables.icons.fontawesome.solid.Exclamation
 import com.taile.petevo.model.FocusMode
 import com.taile.petevo.ui.theme.*
 import kotlin.math.roundToInt
@@ -66,14 +74,16 @@ fun SetupScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 ModeCard(
-                    title = "🍅 Pomodoro",
+                    icon = FontAwesome.Solid.Clock,
+                    title = "Pomodoro",
                     subtitle = "5 mins rest each 25 mins",
                     selected = mode == FocusMode.POMODORO,
                     onClick = { mode = FocusMode.POMODORO },
                     modifier = Modifier.weight(1f)
                 )
                 ModeCard(
-                    title = "🧠 Deep Focus",
+                    icon = FontAwesome.Solid.Brain,
+                    title = "Deep Focus",
                     subtitle = "High risk, high reward",
                     selected = mode == FocusMode.DEEP_FOCUS,
                     onClick = { mode = FocusMode.DEEP_FOCUS },
@@ -93,18 +103,22 @@ fun SetupScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Slider(
-                value = durationMinutes,
-                onValueChange = { durationMinutes = it },
-                valueRange = 10f..180f,
-                steps = 33, // 10, 15, 20, ... 180
-                modifier = Modifier.fillMaxWidth(),
-                colors = SliderDefaults.colors(
-                    thumbColor = PrimaryGreen,
-                    activeTrackColor = PrimaryGreen,
-                    inactiveTrackColor = LightGreen
+            Box(
+                modifier = Modifier.padding(16.dp,0.dp)
+            ){
+                Slider(
+                    value = durationMinutes,
+                    onValueChange = { durationMinutes = it },
+                    valueRange = 10f..180f,
+                    steps = 33, // 10, 15, 20, ... 180
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = SliderDefaults.colors(
+                        thumbColor = PrimaryGreen,
+                        activeTrackColor = PrimaryGreen,
+                        inactiveTrackColor = LightGreen
+                    )
                 )
-            )
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -140,12 +154,21 @@ fun SetupScreen(
                         color = if (projectedXp >= 0) PrimaryGreen else AccentRed
                     )
                     if (projectedXp < 0) {
-                        Text(
-                            text = "⚠️ Your pet is very sad! XP will be negative.",
-                            fontSize = 12.sp,
-                            color = AccentRed,
-                            textAlign = TextAlign.Center
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(
+                                FontAwesome.Solid.Exclamation,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                colorFilter = ColorFilter.tint(AccentRed)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Your pet is very sad! XP will be negative.",
+                                fontSize = 12.sp,
+                                color = AccentRed,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             }
@@ -161,11 +184,20 @@ fun SetupScreen(
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
             ) {
-                Text(
-                    text = "🚀 Begin Focus",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        FontAwesome.Solid.Rocket,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        colorFilter = ColorFilter.tint(Color.White)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Begin Focus",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -174,7 +206,16 @@ fun SetupScreen(
                 onClick = onBack,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("← Back", color = Color.Gray)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        FontAwesome.Solid.ArrowLeft,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        colorFilter = ColorFilter.tint(Color.Gray)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Back", color = Color.Gray)
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -184,6 +225,7 @@ fun SetupScreen(
 
 @Composable
 private fun ModeCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
     subtitle: String,
     selected: Boolean,
@@ -207,6 +249,13 @@ private fun ModeCard(
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Image(
+                icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                colorFilter = ColorFilter.tint(if (selected) DarkGreen else OnSurfaceLight)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = title,
                 fontSize = 16.sp,
@@ -224,5 +273,3 @@ private fun ModeCard(
         }
     }
 }
-
-

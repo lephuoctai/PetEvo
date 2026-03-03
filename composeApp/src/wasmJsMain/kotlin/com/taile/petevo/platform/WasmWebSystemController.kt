@@ -7,6 +7,10 @@ import kotlinx.browser.document
 import kotlinx.browser.window
 import org.w3c.dom.events.Event
 
+@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)
+@JsFun("() => document.hidden")
+private external fun isDocumentHidden(): Boolean
+
 class WasmWebSystemController : SystemController {
 
     override fun acquireWakeLock() {
@@ -30,12 +34,9 @@ class WasmWebSystemController : SystemController {
     }
 
     override fun observeAppVisibility(): Flow<Boolean> = callbackFlow {
-        // In Wasm, Document doesn't expose visibilityState directly.
-        // visibilitychange fires when tab is hidden/shown — treat it as hidden.
         val visibilityHandler: (Event) -> Unit = {
-            // When visibilitychange fires and we can't read the state,
-            // conservatively treat it as "hidden" to enforce strict focus.
-            trySend(false)
+            val hidden = isDocumentHidden()
+            trySend(!hidden)
         }
         val blurHandler: (Event) -> Unit = {
             trySend(false)

@@ -33,11 +33,11 @@ fun emotionColor(emotion: Int): Color {
 
 fun emotionLabel(emotion: Int): String {
     return when {
-        emotion >= 87 -> "😊 Happy"
-        emotion >= 80 -> "🙂 Content"
-        emotion >= 50 -> "😐 Neutral"
-        emotion >= 0 -> "😢 Sad"
-        else -> "😭 Very Sad"
+        emotion >= 87 -> "Happy"
+        emotion >= 80 -> "Content"
+        emotion >= 50 -> "Neutral"
+        emotion >= 0 -> "Sad"
+        else -> "Very Sad"
     }
 }
 

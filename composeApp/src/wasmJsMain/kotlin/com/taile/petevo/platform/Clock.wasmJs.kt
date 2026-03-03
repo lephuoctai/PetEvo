@@ -1,8 +1,8 @@
 package com.taile.petevo.platform
 
 @OptIn(kotlin.js.ExperimentalWasmJsInterop::class)
-private fun dateNow(): Double = js("Date.now()")
+@JsFun("() => Date.now()")
+private external fun dateNow(): Double
 
 actual fun currentTimeMillis(): Long = dateNow().toLong()
-
 

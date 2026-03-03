@@ -42,6 +42,9 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.kotlinx.coroutines.core)
+            implementation("com.composables:icons-font-awesome-solid-cmp:2.2.1")
+            implementation("com.composables:icons-font-awesome-regular-cmp:2.2.1")
+            implementation("com.composables:icons-font-awesome-brands-cmp:2.2.1")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

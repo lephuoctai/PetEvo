@@ -1,5 +1,6 @@
 package com.taile.petevo.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -11,10 +12,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.composables.icons.fontawesome.FontAwesome
+import com.composables.icons.fontawesome.solid.ArrowUp
+import com.composables.icons.fontawesome.solid.Frown
+import com.composables.icons.fontawesome.solid.HeartBroken
+import com.composables.icons.fontawesome.solid.HourglassHalf
+import com.composables.icons.fontawesome.solid.Paw
+import com.composables.icons.fontawesome.solid.Smile
+import com.composables.icons.fontawesome.solid.Trophy
 import com.taile.petevo.engine.FocusUiState
 import com.taile.petevo.model.SessionState
 import com.taile.petevo.ui.theme.*
@@ -42,9 +52,11 @@ fun ResultScreen(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = if (isSuccess) "🎉" else "💔",
-                fontSize = 72.sp
+            Image(
+                if (isSuccess) FontAwesome.Solid.Trophy else FontAwesome.Solid.HeartBroken,
+                contentDescription = null,
+                modifier = Modifier.size(72.dp),
+                colorFilter = ColorFilter.tint(if (isSuccess) EmotionHappy else AccentRed)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -78,7 +90,7 @@ fun ResultScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Pet emoji
+            // Pet icon
             Box(
                 modifier = Modifier
                     .size(80.dp)
@@ -90,9 +102,11 @@ fun ResultScreen(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = if (isSuccess) "😺" else "😿",
-                    fontSize = 40.sp
+                Image(
+                    if (isSuccess) FontAwesome.Solid.Smile else FontAwesome.Solid.Frown,
+                    contentDescription = "Pet",
+                    modifier = Modifier.size(40.dp),
+                    colorFilter = ColorFilter.tint(if (isSuccess) EmotionHappy else AccentRed)
                 )
             }
 
@@ -118,12 +132,21 @@ fun ResultScreen(
 
             // Level
             if (state.didLevelUp) {
-                Text(
-                    text = "🎊 LEVEL UP! → Level ${state.pet.level}",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = EmotionHappy
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        FontAwesome.Solid.ArrowUp,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        colorFilter = ColorFilter.tint(EmotionHappy)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "LEVEL UP! → Level ${state.pet.level}",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = EmotionHappy
+                    )
+                }
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -142,12 +165,21 @@ fun ResultScreen(
 
             if (!isSuccess) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "⏳ 5 minute cooldown active",
-                    fontSize = 14.sp,
-                    color = AccentOrange,
-                    fontWeight = FontWeight.Medium
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        FontAwesome.Solid.HourglassHalf,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        colorFilter = ColorFilter.tint(AccentOrange)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "5 minute cooldown active",
+                        fontSize = 14.sp,
+                        color = AccentOrange,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
 
@@ -161,12 +193,21 @@ fun ResultScreen(
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = accentColor)
             ) {
-                Text(
-                    text = if (isSuccess) "Continue 🐾" else "OK 😔",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = if (isSuccess) "Continue" else "OK",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Image(
+                        if (isSuccess) FontAwesome.Solid.Paw else FontAwesome.Solid.Frown,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        colorFilter = ColorFilter.tint(Color.White)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

@@ -1,5 +1,6 @@
 package com.taile.petevo.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -11,10 +12,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.composables.icons.fontawesome.FontAwesome
+import com.composables.icons.fontawesome.solid.Fire
+import com.composables.icons.fontawesome.solid.Frown
+import com.composables.icons.fontawesome.solid.FrownOpen
+import com.composables.icons.fontawesome.solid.HourglassHalf
+import com.composables.icons.fontawesome.solid.Paw
+import com.composables.icons.fontawesome.solid.Smile
+import com.composables.icons.fontawesome.solid.Stopwatch
 import com.taile.petevo.engine.FocusUiState
 import com.taile.petevo.logic.LevelSystem
 import com.taile.petevo.model.SessionState
@@ -64,9 +73,11 @@ fun HomeScreen(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = petEmoji(pet.emotion),
-                    fontSize = 64.sp
+                Image(
+                    petIcon(pet.emotion),
+                    contentDescription = "Pet",
+                    modifier = Modifier.size(72.dp),
+                    colorFilter = ColorFilter.tint(eColor)
                 )
             }
 
@@ -158,8 +169,8 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                StatChip("🔥 ${pet.streak}", "Streak")
-                StatChip("⏱ ${pet.totalFocusMinutes}m", "Total Focus")
+                StatChip(FontAwesome.Solid.Fire, "${pet.streak}", "Streak", AccentOrange)
+                StatChip(FontAwesome.Solid.Stopwatch, "${pet.totalFocusMinutes}m", "Total Focus", PrimaryGreen)
             }
         }
 
@@ -170,12 +181,21 @@ fun HomeScreen(
             if (state.sessionState == SessionState.COOLDOWN) {
                 val mins = state.cooldownRemainingSeconds / 60
                 val secs = state.cooldownRemainingSeconds % 60
-                Text(
-                    text = "⏳ Cooldown: ${mins}m ${secs}s",
-                    fontSize = 16.sp,
-                    color = AccentRed,
-                    fontWeight = FontWeight.Medium
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        FontAwesome.Solid.HourglassHalf,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        colorFilter = ColorFilter.tint(AccentRed)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Cooldown: ${mins}m ${secs}s",
+                        fontSize = 16.sp,
+                        color = AccentRed,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -201,19 +221,27 @@ fun HomeScreen(
 }
 
 @Composable
-private fun StatChip(value: String, label: String) {
+private fun StatChip(icon: androidx.compose.ui.graphics.vector.ImageVector, value: String, label: String, tint: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                colorFilter = ColorFilter.tint(tint)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(text = value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
+        }
         Text(text = label, fontSize = 12.sp, color = Color.Gray)
     }
 }
 
-private fun petEmoji(emotion: Int): String {
+private fun petIcon(emotion: Int): androidx.compose.ui.graphics.vector.ImageVector {
     return when {
-        emotion >= 87 -> "🐱"
-        emotion >= 50 -> "🐾"
-        emotion >= 0 -> "😿"
-        else -> "🙀"
+        emotion >= 87 -> FontAwesome.Solid.Smile
+        emotion >= 50 -> FontAwesome.Solid.Paw
+        emotion >= 0 -> FontAwesome.Solid.Frown
+        else -> FontAwesome.Solid.FrownOpen
     }
 }
-

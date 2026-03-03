@@ -40,8 +40,11 @@ class FocusEngine(
     private var visibilityJob: Job? = null
     private var cooldownJob: Job? = null
 
-    // Simple flag to prevent double end-session calls
-    private var sessionEnded = false
+    // Thread-safe flag to prevent double end-session calls
+    private val sessionEndedFlow = MutableStateFlow(false)
+    private var sessionEnded: Boolean
+        get() = sessionEndedFlow.value
+        set(value) { sessionEndedFlow.value = value }
 
     companion object {
         private const val COOLDOWN_DURATION_MS = 5000
@@ -150,7 +153,7 @@ class FocusEngine(
             logDebug(TAG, "timerJob: started ${duration * 60}s")
             var remaining = duration * 60
             while (remaining > 0 && isActive) {
-                //Debug Test
+                //debug testing
                 delay(1L)
                 remaining--
                 _state.update { it.copy(session = it.session.copy(remainingSeconds = remaining)) }
@@ -181,11 +184,10 @@ class FocusEngine(
      * are on the same coroutine dispatcher (no true parallelism).
      */
     private fun tryEndSession(): Boolean {
-        if (sessionEnded) {
+        if (!sessionEndedFlow.compareAndSet(expect = false, update = true)) {
             logDebug(TAG, "tryEndSession: ALREADY ENDED")
             return false
         }
-        sessionEnded = true
         logDebug(TAG, "tryEndSession: OK")
         return true
     }
@@ -301,11 +303,8 @@ class FocusEngine(
 
     fun cancelSession() {
         logDebug(TAG, "cancelSession: state=${_state.value.sessionState}")
-        // Dispatch into scope to run on same dispatcher as timer/visibility
-        scope.launch {
-            if (_state.value.sessionState == SessionState.RUNNING) {
-                endSessionWithFailure()
-            }
+        if (_state.value.sessionState == SessionState.RUNNING) {
+            endSessionWithFailure()
         }
     }
 
