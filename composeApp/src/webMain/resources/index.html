@@ -7,7 +7,7 @@
     <meta name="description" content="Pet Evolution - Hardcore Focus App with a Virtual Pet">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Pet Evolution</title>
+    <title>PetEvo</title>
     <link type="text/css" rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -15,6 +15,10 @@
     <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 </head>
 <body style="text-align: center; align-content: center">
+<div id="landscape-blocker">
+    <div class="icon">📱</div>
+    <div class="msg">Please rotate your device to portrait mode</div>
+</div>
 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 50 50" role="presentation">
     <circle cx="25" cy="25" r="20" stroke="#ccc" stroke-width="4" fill="none"/>
     <circle cx="25" cy="25" r="20" stroke="#333" stroke-width="4" fill="none" stroke-linecap="round"
@@ -25,6 +29,9 @@
 </svg>
 <script type="application/javascript" src="composeApp.js"></script>
 <script>
+// Lock orientation to portrait (works in fullscreen PWA)
+try { screen.orientation.lock('portrait').catch(function(){}); } catch(e) {}
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
         navigator.serviceWorker.register('sw.js').then(function(reg) {

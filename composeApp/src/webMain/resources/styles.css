@@ -5,3 +5,32 @@ html, body {
     padding: 0;
     overflow: hidden;
 }
+
+/* Block landscape: show overlay when rotated */
+#landscape-blocker {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #1a1a2e;
+    color: white;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    font-family: sans-serif;
+    text-align: center;
+    gap: 16px;
+}
+#landscape-blocker .icon {
+    font-size: 48px;
+}
+#landscape-blocker .msg {
+    font-size: 18px;
+    opacity: 0.8;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+    #landscape-blocker {
+        display: flex !important;
+    }
+}
