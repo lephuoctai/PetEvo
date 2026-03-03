@@ -1,6 +1,6 @@
 {
-  "name": "FocusPet",
-  "short_name": "FocusPet",
+  "name": "Pet Evolution",
+  "short_name": "PetEvo",
   "description": "Hardcore Focus App with Virtual Pet",
   "start_url": "/",
   "display": "standalone",

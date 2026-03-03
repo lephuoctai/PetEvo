@@ -53,7 +53,7 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "FocusPet",
+                text = "Pet Evolution",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = DarkGreen

@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'focuspet-v1';
+﻿const CACHE_NAME = 'PetEvo-v1';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',

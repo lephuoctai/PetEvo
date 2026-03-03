@@ -46,7 +46,7 @@ class FocusTimerService : Service() {
     private fun buildNotification(): Notification {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(this, CHANNEL_ID)
-                .setContentTitle("FocusPet")
+                .setContentTitle("PetEvo")
                 .setContentText("Focus session in progress... 🐾")
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
                 .setOngoing(true)
@@ -54,7 +54,7 @@ class FocusTimerService : Service() {
         } else {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
-                .setContentTitle("FocusPet")
+                .setContentTitle("PetEvo")
                 .setContentText("Focus session in progress... 🐾")
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
                 .setOngoing(true)

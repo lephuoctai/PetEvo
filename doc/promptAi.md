@@ -2,7 +2,7 @@
 
 ## 🎯 PROJECT OVERVIEW
 
-Build "FocusPet", a Hardcore Focus App using Kotlin Multiplatform (KMP) for Android and PWA.
+Build "PetEvo", a Hardcore Focus App using Kotlin Multiplatform (KMP) for Android and PWA.
 
 The app rewards users for staying focused and punishes them (and their pet) for distractions.
 
