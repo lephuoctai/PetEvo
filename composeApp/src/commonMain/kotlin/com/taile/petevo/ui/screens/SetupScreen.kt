@@ -70,7 +70,9 @@ fun SetupScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Max),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 ModeCard(
@@ -79,7 +81,7 @@ fun SetupScreen(
                     subtitle = "5 mins rest/25 mins",
                     selected = mode == FocusMode.POMODORO,
                     onClick = { mode = FocusMode.POMODORO },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).fillMaxHeight()
                 )
                 ModeCard(
                     icon = FontAwesome.Solid.Brain,
@@ -87,7 +89,7 @@ fun SetupScreen(
                     subtitle = "High risk, high reward",
                     selected = mode == FocusMode.DEEP_FOCUS,
                     onClick = { mode = FocusMode.DEEP_FOCUS },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).fillMaxHeight()
                 )
             }
 
@@ -246,7 +248,10 @@ private fun ModeCard(
         colors = CardDefaults.outlinedCardColors(containerColor = bgColor)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .defaultMinSize(minHeight = 120.dp)
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
