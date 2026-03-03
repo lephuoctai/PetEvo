@@ -19,5 +19,11 @@ interface SystemController {
 
     /** Emits false when user leaves the app (tab hidden / app backgrounded) */
     fun observeAppVisibility(): Flow<Boolean>
+
+    /** Vibrate device — short for success, long pattern for failure */
+    fun vibrate(success: Boolean)
+
+    /** Play a notification sound */
+    fun playNotificationSound(success: Boolean)
 }
 

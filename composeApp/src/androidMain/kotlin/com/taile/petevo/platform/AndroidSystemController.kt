@@ -6,11 +6,15 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.media.RingtoneManager
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -92,6 +96,38 @@ class AndroidSystemController(
             if (enable) btAdapter.enable() else btAdapter.disable()
         } catch (_: SecurityException) { }
         catch (_: Exception) { }
+    }
+
+    @SuppressLint("MissingPermission")
+    @Suppress("DEPRECATION")
+    override fun vibrate(success: Boolean) {
+        try {
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vm = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                vm.defaultVibrator
+            } else {
+                context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (success) {
+                    vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 150, 100, 150), -1))
+                } else {
+                    vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 400, 200, 400), -1))
+                }
+            } else {
+                vibrator.vibrate(if (success) 300L else 800L)
+            }
+        } catch (_: Exception) { }
+    }
+
+    override fun playNotificationSound(success: Boolean) {
+        try {
+            val uri = RingtoneManager.getDefaultUri(
+                if (success) RingtoneManager.TYPE_NOTIFICATION else RingtoneManager.TYPE_ALARM
+            )
+            val ringtone = RingtoneManager.getRingtone(context, uri)
+            ringtone?.play()
+        } catch (_: Exception) { }
     }
 
     override fun observeAppVisibility(): Flow<Boolean> = callbackFlow {

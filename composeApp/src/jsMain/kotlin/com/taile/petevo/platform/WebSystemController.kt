@@ -37,6 +37,40 @@ class WebSystemController : SystemController {
         // No-op on web
     }
 
+    override fun vibrate(success: Boolean) {
+        try {
+            val nav = window.asDynamic().navigator
+            if (nav.vibrate != null && nav.vibrate != undefined) {
+                if (success) {
+                    nav.vibrate(arrayOf(150, 100, 150))
+                } else {
+                    nav.vibrate(arrayOf(400, 200, 400))
+                }
+            }
+        } catch (_: Exception) { }
+    }
+
+    override fun playNotificationSound(success: Boolean) {
+        try {
+            val AudioContext = js("window.AudioContext || window.webkitAudioContext")
+            val ctx = js("new AudioContext()")
+            val osc = ctx.createOscillator()
+            val gain = ctx.createGain()
+            osc.connect(gain)
+            gain.connect(ctx.destination)
+            gain.gain.value = 0.3
+            if (success) {
+                osc.frequency.value = 880
+                osc.start()
+                osc.stop(ctx.currentTime + 0.2)
+            } else {
+                osc.frequency.value = 330
+                osc.start()
+                osc.stop(ctx.currentTime + 0.5)
+            }
+        } catch (_: Exception) { }
+    }
+
     override fun observeAppVisibility(): Flow<Boolean> = callbackFlow {
         val visibilityHandler: (Event) -> Unit = {
             val hidden = document.asDynamic().hidden as Boolean

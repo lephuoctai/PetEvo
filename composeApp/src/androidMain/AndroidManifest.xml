@@ -7,6 +7,9 @@
     <!-- Internet access -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Vibration -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <!-- DND / Do Not Disturb -->
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 

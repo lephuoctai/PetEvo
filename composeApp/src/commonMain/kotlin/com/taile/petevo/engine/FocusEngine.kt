@@ -224,6 +224,9 @@ class FocusEngine(
 
         logDebug(TAG, "SUCCESS: xp=$xpGained level=${updatedPet.level} emotion=${updatedPet.emotion}")
 
+        systemController.vibrate(true)
+        systemController.playNotificationSound(true)
+
         _state.update {
             it.copy(
                 pet = updatedPet,
@@ -263,6 +266,9 @@ class FocusEngine(
         releasePlatformResources()
 
         logDebug(TAG, "applyFailurePenalty: emotion=${updatedPet.emotion} -> state=FAIL")
+
+        systemController.vibrate(false)
+        systemController.playNotificationSound(false)
 
         _state.update {
             it.copy(
