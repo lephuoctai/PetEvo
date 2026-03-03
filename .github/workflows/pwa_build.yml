@@ -46,6 +46,8 @@ jobs:
         run: |
           mkdir -p deploy
           cp -r composeApp/build/dist/wasmJs/productionExecutable/* deploy/
+          cp vercel.json deploy/
+
       - name: Install Vercel CLI
         run: npm install -g vercel
 
@@ -57,3 +59,4 @@ jobs:
           VERCEL_TOKEN_PET_EVO: ${{ secrets.VERCEL_TOKEN_PET_EVO }}
           VERCEL_ORG_ID_PET_EVO: ${{ secrets.VERCEL_ORG_ID_PET_EVO }}
           VERCEL_PROJECT_ID_PET_EVO: ${{ secrets.VERCEL_PROJECT_ID_PET_EVO }}
+
