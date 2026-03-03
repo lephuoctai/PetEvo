@@ -23,13 +23,7 @@ kotlin {
     
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
-        browser {
-            commonWebpackConfig {
-                devServer = (devServer ?: org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig.DevServer()).apply {
-                    open = mapOf("app" to mapOf("name" to "google chrome"))
-                }
-            }
-        }
+        browser()
         binaries.executable()
     }
     
