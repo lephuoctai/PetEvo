@@ -13,11 +13,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.composables.icons.fontawesome.FontAwesome
+import com.composables.icons.fontawesome.solid.ArrowRight
 import com.composables.icons.fontawesome.solid.ArrowUp
 import com.composables.icons.fontawesome.solid.Frown
 import com.composables.icons.fontawesome.solid.HeartBroken
@@ -141,7 +143,36 @@ fun ResultScreen(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "LEVEL UP! → Level ${state.pet.level}",
+                        text = "LEVEL UP! ",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = EmotionHappy
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Last Level
+                    Text(
+                        text = "${state.prevLevel}",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Image(
+                        FontAwesome.Solid.ArrowRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        colorFilter = ColorFilter.tint(Color.White)
+                    )
+
+                    Spacer(modifier = Modifier.width(6.dp))
+                    //New Level
+                    Text(
+                        text = state.pet.level.toString(),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = EmotionHappy
@@ -150,15 +181,9 @@ fun ResultScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            Text(
-                text = "Level ${state.pet.level}",
-                fontSize = 18.sp,
-                color = Color.White
-            )
-
             // Emotion change
             Text(
-                text = "Emotion: ${emotionLabel(state.pet.emotion)}",
+                text = "Emotion:${state.pet.emotion}",
                 fontSize = 16.sp,
                 color = emotionColor(state.pet.emotion)
             )
@@ -171,13 +196,6 @@ fun ResultScreen(
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
                         colorFilter = ColorFilter.tint(AccentOrange)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "5 minute cooldown active",
-                        fontSize = 14.sp,
-                        color = AccentOrange,
-                        fontWeight = FontWeight.Medium
                     )
                 }
             }

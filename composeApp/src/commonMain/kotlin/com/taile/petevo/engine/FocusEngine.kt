@@ -25,7 +25,8 @@ data class FocusUiState(
     val session: FocusSession = FocusSession(),
     val cooldownRemainingSeconds: Int = 0,
     val lastXpGained: Int = 0,
-    val didLevelUp: Boolean = false
+    val didLevelUp: Boolean = false,
+    val prevLevel: Int = 1
 )
 
 class FocusEngine(
@@ -140,7 +141,8 @@ class FocusEngine(
                 sessionState = SessionState.RUNNING,
                 session = session,
                 lastXpGained = 0,
-                didLevelUp = false
+                didLevelUp = false,
+                prevLevel = it.pet.level
             )
         }
 
@@ -211,7 +213,6 @@ class FocusEngine(
         val xpGained = (baseXp * multiplier).roundToInt()
 
         val newEmotion = EmotionEngine.applyDelta(pet.emotion, EmotionEngine.successDelta(session.mode))
-        val prevLevel = pet.level
         var updatedPet = LevelSystem.applyXp(pet.copy(emotion = newEmotion), xpGained)
         updatedPet = updatedPet.copy(
             totalFocusMinutes = updatedPet.totalFocusMinutes + session.durationMinutes,
@@ -232,7 +233,7 @@ class FocusEngine(
                 pet = updatedPet,
                 sessionState = SessionState.SUCCESS,
                 lastXpGained = xpGained,
-                didLevelUp = updatedPet.level > prevLevel
+                didLevelUp = updatedPet.level > currentState.prevLevel
             )
         }
     }
