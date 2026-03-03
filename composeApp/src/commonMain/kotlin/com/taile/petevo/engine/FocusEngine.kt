@@ -272,8 +272,9 @@ class FocusEngine(
                 didLevelUp = false
             )
         }
-
-        startCooldownTimer(cooldownEnd)
+        // Do NOT start cooldown timer here — it would immediately overwrite
+        // FAIL → COOLDOWN and skip the Result screen. The cooldown timer
+        // starts when the user taps "acknowledge" on the Result screen.
     }
 
     private fun releasePlatformResources() {

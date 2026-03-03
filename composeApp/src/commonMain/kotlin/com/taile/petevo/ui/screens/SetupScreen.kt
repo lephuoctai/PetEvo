@@ -76,7 +76,7 @@ fun SetupScreen(
                 ModeCard(
                     icon = FontAwesome.Solid.Clock,
                     title = "Pomodoro",
-                    subtitle = "5 mins rest each 25 mins",
+                    subtitle = "5 mins rest/25 mins",
                     selected = mode == FocusMode.POMODORO,
                     onClick = { mode = FocusMode.POMODORO },
                     modifier = Modifier.weight(1f)
