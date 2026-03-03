@@ -44,7 +44,7 @@ class FocusEngine(
     private var sessionEnded = false
 
     companion object {
-        private const val COOLDOWN_DURATION_MS = 5 * 60 * 1000L // 5 minutes
+        private const val COOLDOWN_DURATION_MS = 5000
     }
 
     init {
@@ -150,7 +150,8 @@ class FocusEngine(
             logDebug(TAG, "timerJob: started ${duration * 60}s")
             var remaining = duration * 60
             while (remaining > 0 && isActive) {
-                delay(1000L)
+                //Debug Test
+                delay(1L)
                 remaining--
                 _state.update { it.copy(session = it.session.copy(remainingSeconds = remaining)) }
             }

@@ -67,7 +67,7 @@ fun SetupScreen(
             ) {
                 ModeCard(
                     title = "🍅 Pomodoro",
-                    subtitle = "Stable XP gain",
+                    subtitle = "5 mins rest each 25 mins",
                     selected = mode == FocusMode.POMODORO,
                     onClick = { mode = FocusMode.POMODORO },
                     modifier = Modifier.weight(1f)
