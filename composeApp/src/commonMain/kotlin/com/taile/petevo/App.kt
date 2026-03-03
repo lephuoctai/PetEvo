@@ -2,7 +2,6 @@ package com.taile.petevo
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -46,7 +45,6 @@ fun App() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .safeContentPadding()
         ) {
             Crossfade(targetState = currentScreen) { screen ->
                 when (screen) {

@@ -47,7 +47,7 @@ fun HomeScreen(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(64.dp))
 
             Text(
                 text = "Pet Evolution",

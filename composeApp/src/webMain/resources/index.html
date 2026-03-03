@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <meta name="theme-color" content="#4CAF50">
     <meta name="description" content="Pet Evolution - Hardcore Focus App with a Virtual Pet">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>PetEvo</title>
     <link type="text/css" rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
@@ -29,6 +30,25 @@
 </svg>
 <script type="application/javascript" src="composeApp.js"></script>
 <script>
+// Request true fullscreen on first user interaction (hides status bar on mobile browsers)
+function requestFullscreen() {
+    var el = document.documentElement;
+    var rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if (rfs) {
+        rfs.call(el).catch(function(){});
+    }
+    // Only need to do this once
+    document.removeEventListener('click', requestFullscreen);
+    document.removeEventListener('touchstart', requestFullscreen);
+}
+// Don't request if already in standalone/fullscreen PWA mode
+if (!window.matchMedia('(display-mode: fullscreen)').matches &&
+    !window.matchMedia('(display-mode: standalone)').matches &&
+    !window.navigator.standalone) {
+    document.addEventListener('click', requestFullscreen, {once: true});
+    document.addEventListener('touchstart', requestFullscreen, {once: true});
+}
+
 // Lock orientation to portrait (works in fullscreen PWA)
 try { screen.orientation.lock('portrait').catch(function(){}); } catch(e) {}
 
