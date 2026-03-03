@@ -18,15 +18,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.composables.icons.fontawesome.FontAwesome
 import com.composables.icons.fontawesome.solid.Fire
-import com.composables.icons.fontawesome.solid.Frown
-import com.composables.icons.fontawesome.solid.FrownOpen
 import com.composables.icons.fontawesome.solid.HourglassHalf
-import com.composables.icons.fontawesome.solid.Paw
-import com.composables.icons.fontawesome.solid.Smile
 import com.composables.icons.fontawesome.solid.Stopwatch
 import com.taile.petevo.engine.FocusUiState
 import com.taile.petevo.logic.LevelSystem
 import com.taile.petevo.model.SessionState
+import com.taile.petevo.ui.components.PetDogAvatar
 import com.taile.petevo.ui.theme.*
 
 @Composable
@@ -64,20 +61,19 @@ fun HomeScreen(
             // Pet Avatar
             Box(
                 modifier = Modifier
-                    .size(140.dp)
+                    .size(160.dp)
                     .clip(CircleShape)
                     .background(
                         Brush.radialGradient(
-                            colors = listOf(eColor.copy(alpha = 0.6f), eColor.copy(alpha = 0.2f))
+                            colors = listOf(eColor.copy(alpha = 0.3f), eColor.copy(alpha = 0.05f))
                         )
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    petIcon(pet.emotion),
-                    contentDescription = "Pet",
-                    modifier = Modifier.size(72.dp),
-                    colorFilter = ColorFilter.tint(eColor)
+                PetDogAvatar(
+                    emotion = pet.emotion,
+                    modifier = Modifier.size(150.dp),
+                    accentColor = eColor
                 )
             }
 
@@ -237,11 +233,3 @@ private fun StatChip(icon: androidx.compose.ui.graphics.vector.ImageVector, valu
     }
 }
 
-private fun petIcon(emotion: Int): androidx.compose.ui.graphics.vector.ImageVector {
-    return when {
-        emotion >= 87 -> FontAwesome.Solid.Smile
-        emotion >= 50 -> FontAwesome.Solid.Paw
-        emotion >= 0 -> FontAwesome.Solid.Frown
-        else -> FontAwesome.Solid.FrownOpen
-    }
-}
